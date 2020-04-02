@@ -1,0 +1,456 @@
+<html>
+<head>
+<title>Dots and Boxes!</title>
+<meta name = "description" content = "Play online games including Dots and Boxes by sending links."/>
+<meta property = "og:description" content = "Play online games including Dots and Boxes by sending links."/>
+<meta property = "og:image" content = "http://canvasgames.000webhostapp.com/dots_and_boxes_preview.png"/>
+<link rel = "stylesheet" type = "text/css" href = "style.css">
+<link rel = "stylesheet" href = "https://fonts.googleapis.com/css?family=Permanent+Marker">
+<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Poppins" rel="stylesheet"> 
+</head>
+<body>
+<div class = "navbar">
+<a href = "index.html"><img src = "home_icon.png" class = "home_icon"></a>
+<div class = "icon_tab_selected"><img src = "dots_and_boxes_preview.png" width = "55px" height = "55px"></div>
+<a href="connect4.html"><div class = "icon_tab"><img src = "connect4_preview.png" width = "64px" height = "55px"></div></a>
+<center>Canvas Games</center>
+</div>
+<div class = "navbar_padding"></div>
+<div class = "center">
+<p style = "background-color: LightBlue; border: 2px solid gray; border-radius: 2px; text-align: center;"><b>Current Score: <span id = "score"></span></b></p>
+<div class = "button_container"><div class = "disabled_button" onclick = "submit_move()">Submit move</div></div>
+<canvas class = "game_board">
+</div>
+<div class = "modal">
+<div class = "modal-content">
+<div style = "text-align: center; border-radius: 7px 7px 0px 0px; background-color: #CCCCCC; font-size: 2em;"><b>Your turn is over!</b></div>
+<div style = "padding: 10px;">
+<b>Send this link to your opponent:</b><br><br>
+<div style = "padding-right: 7px; display: inline-block;"> <input id = "link"></div>
+<div class = "button" onclick = "document.getElementById('link').select(); document.execCommand('Copy'); this.innerHTML = 'Copied!';document.getElementById('link').blur();">Click to copy</div>
+</div>
+</div>
+</div>
+<script>
+function createArray(length){
+    var arr = new Array(length || 0),
+        i = length;
+
+    if (arguments.length > 1) {
+        var args = Array.prototype.slice.call(arguments, 1);
+        while(i--) arr[length-1 - i] = createArray.apply(this, args);
+    }
+
+    return arr;
+}
+function draw_line(context, x0, y0, x1, y1, color, width){
+	context.lineWidth = width;
+	context.strokeStyle = color;
+	context.beginPath()
+	context.moveTo(x0, y0);
+	context.lineTo(x1, y1);
+	context.stroke();
+	context.closePath();
+}
+function draw_circle(context, x0, y0, r, color, width){
+	context.lineWidth = width;
+	context.strokeStyle = color;
+	context.beginPath();
+	context.arc(x0, y0, r, 0, Math.PI*2);
+	context.stroke();
+	context.closePath();
+}
+function draw_dot(x, y){
+	if(x < 0 || y < 0 || x >= 9 || y >= 9){
+		return;
+	}
+	draw_circle(context, x*70 + 35, y*70 + 35, 7, "black", 14);
+}
+function draw_squares(){
+	for(var x = 0; x < 8; x++){
+		for(var y = 0; y < 8; y++){
+			if(squares[x][y] == 1){
+				context.fillStyle = "LightBlue";
+				context.fillRect(x*70 + 40, y*70 + 40, 60, 60);
+			}
+			if(squares[x][y] == 2){
+				context.fillStyle = "LightPink";
+				context.fillRect(x*70 + 40, y*70 + 40, 60, 60);
+			}
+		}
+	}
+}
+function draw_lines(){
+	for(var x = 0; x < 8; x++){
+		for(var y = 0; y < 9; y++){
+			if(horizontal[x][y] == 1){
+				draw_line(context, x*70 + 30, y*70 + 35, x*70 + 110, y*70 + 35, "Gray", 10);
+			}
+		}
+	}
+	for(x = 0; x < 9; x++){
+		for(y = 0; y < 8; y++){
+			if(vertical[x][y] == 1){
+				draw_line(context, x*70 + 35, y*70 + 30, x*70 + 35, y*70 + 110, "Gray", 10);
+			}
+		}
+	}
+}
+function draw_dots(){
+	for(var x = 0; x < 9; x++){
+		for(var y = 0; y < 9; y++){
+			draw_dot(x, y);
+		}
+	}
+}
+function onload(){
+	modal = document.getElementsByClassName("modal")[0];
+	window.onclick = function(event) {
+		if (event.target == modal) {
+			modal.style.display = "none";
+		}
+	} 
+	canvas = document.getElementsByTagName("canvas")[0];
+	canvas.setAttribute("width", "640");
+	canvas.setAttribute("height", "640");
+	element_left = canvas.offsetLeft;
+	element_top = canvas.offsetTop;
+	canvas.addEventListener("click", do_click, false);
+	context = canvas.getContext("2d");
+	process_squares();
+	process_lines();
+	draw_squares();
+	draw_lines();
+	draw_dots();
+}
+function get_query_variable(variable){
+	var query = window.location.search.substring(1);
+	var vars = query.split("&");
+	for(var i=0; i<vars.length; i++) {
+		var pair = vars[i].split("=");
+		if(pair[0] == variable){
+			return pair[1];
+		}
+	}
+	return false;
+}
+function remove_old_line(){
+	if(last_direc == "right"){
+		draw_line(context, last_dot_x0*70 + 30, last_dot_y0*70 + 35, last_dot_x0*70 + 110, last_dot_y0*70 + 35, "#EEEEEE", 10);
+	}
+	if(last_direc == "left"){
+		draw_line(context, last_dot_x0*70 + 40, last_dot_y0*70 + 35, last_dot_x0*70 - 40, last_dot_y0*70 + 35, "#EEEEEE", 10);
+	}
+	if(last_direc == "up"){
+		draw_line(context, last_dot_x0*70 + 35, last_dot_y0*70 + 40, last_dot_x0*70 + 35, last_dot_y0*70 - 40, "#EEEEEE", 10);
+	}
+	if(last_direc == "down"){
+		draw_line(context, last_dot_x0*70 + 35, last_dot_y0*70 + 30, last_dot_x0*70 + 35, last_dot_y0*70 + 110, "#EEEEEE", 10);
+	}
+	draw_dot(last_dot_x0, last_dot_y0);
+	draw_dot(last_dot_x1, last_dot_y1);
+}
+function do_click(event){
+	if(turn_is_over){
+		return;
+	}
+	var x = event.pageX - element_left;
+    var y = event.pageY - element_top;
+	var dot_x = Math.round((x - 35)/70);
+	var dot_y = Math.round((y - 35)/70);
+	var dx = x - dot_x*70 - 35;
+	var dy = y - dot_y*70 - 35;
+	var direc = "right";
+	if(dx > dy && dx > -dy){
+		direc = "right";
+	}
+	if(-dx > dy && -dx > -dy){
+		direc = "left";
+	}
+	if(dy > dx && dy > -dx){
+		direc = "down";
+	}
+	if(-dy > dx && -dy > -dx){
+		direc = "up";
+	}
+	if(direc == "right"){
+		if(dot_x < 8 && horizontal[dot_x][dot_y] != 1){
+			if(horizontal[dot_x][dot_y] != 1){
+				remove_old_line();
+				last_dot_x0 = dot_x;
+				last_dot_x1 = dot_x + 1;
+				last_dot_y0 = dot_y;
+				last_dot_y1 = dot_y;
+				draw_line(context, dot_x*70 + 30, dot_y*70 + 35, dot_x*70 + 110, dot_y*70 + 35, "blue", 10);
+				last_direc = direc;
+				if(!has_clicked){
+					document.getElementsByClassName("disabled_button")[0].className = "button";
+					has_clicked = true;
+				}
+			}
+		}
+	}
+	if(direc == "left"){
+		if(dot_x > 0){
+			if(horizontal[dot_x - 1][dot_y] != 1){
+				remove_old_line();
+				last_dot_x0 = dot_x;
+				last_dot_x1 = dot_x - 1;
+				last_dot_y0 = dot_y;
+				last_dot_y1 = dot_y;
+				draw_line(context, dot_x*70 + 40, dot_y*70 + 35, dot_x*70 - 40, dot_y*70 + 35, "blue", 10);
+				last_direc = direc;
+				if(!has_clicked){
+					document.getElementsByClassName("disabled_button")[0].className = "button";
+					has_clicked = true;
+				}
+			}
+		}
+	}
+	if(direc == "up"){
+		if(dot_y > 0){
+			if(vertical[dot_x][dot_y - 1] != 1){
+				remove_old_line();
+				last_dot_x0 = dot_x;
+				last_dot_x1 = dot_x;
+				last_dot_y0 = dot_y;
+				last_dot_y1 = dot_y - 1;
+				draw_line(context, dot_x*70 + 35, dot_y*70 + 40, dot_x*70 + 35, dot_y*70 - 40, "blue", 10);
+				last_direc = direc;
+				if(!has_clicked){
+					document.getElementsByClassName("disabled_button")[0].className = "button";
+					has_clicked = true;
+				}
+			}
+		}
+	}
+	if(direc == "down"){
+		if(dot_y < 8){
+			if(vertical[dot_x][dot_y] != 1){
+				remove_old_line();
+				last_dot_x0 = dot_x;
+				last_dot_x1 = dot_x;
+				last_dot_y0 = dot_y;
+				last_dot_y1 = dot_y + 1;
+				draw_line(context, dot_x*70 + 35, dot_y*70 + 30, dot_x*70 + 35, dot_y*70 + 110, "blue", 10);
+				last_direc = direc;
+				if(!has_clicked){
+					document.getElementsByClassName("disabled_button")[0].className = "button";
+					has_clicked = true;
+				}
+			}
+		}
+	}
+	draw_dot(last_dot_x0, last_dot_y0);
+	draw_dot(last_dot_x1, last_dot_y1);
+}
+function fill_square(x, y){
+	if(x < 0 || y < 0 || x >= 8 || y >= 8){
+		return;
+	}
+	if(squares[x][y] == 0 && horizontal[x][y] == 1 && horizontal[x][y + 1] == 1 && vertical[x][y] == 1 && vertical[x + 1][y] == 1){
+		squares[x][y] = 1;
+		filled_square = true;
+		context.fillStyle = "LightBlue";
+		context.fillRect(x*70 + 40, y*70 + 40, 60, 60);
+		draw_dot(x, y);
+		draw_dot(x + 1, y);
+		draw_dot(x, y + 1);
+		draw_dot(x + 1, y + 1);
+		score += 1;
+		document.getElementById("score").innerHTML = score.toString();
+	}
+}
+function submit_move(){
+	if(last_dot_x0 !== false){
+		if(last_direc == "up"){
+			draw_line(context, last_dot_x0*70 + 35, last_dot_y0*70 + 40, last_dot_x0*70 + 35, last_dot_y0*70 - 40, "gray", 10);
+			vertical[last_dot_x1][last_dot_y1] = 1;
+		}
+		if(last_direc == "down"){
+			draw_line(context, last_dot_x0*70 + 35, last_dot_y0*70 + 30, last_dot_x0*70 + 35, last_dot_y0*70 + 110, "gray", 10);
+			vertical[last_dot_x0][last_dot_y0] = 1;
+		}
+		if(last_direc == "left"){
+			draw_line(context, last_dot_x0*70 + 40, last_dot_y0*70 + 35, last_dot_x0*70 - 40, last_dot_y0*70 + 35, "gray", 10);
+			horizontal[last_dot_x1][last_dot_y1] = 1;
+		}
+		if(last_direc == "right"){
+			draw_line(context, last_dot_x0*70 + 30, last_dot_y0*70 + 35, last_dot_x0*70 + 110, last_dot_y0*70 + 35, "gray", 10);
+			horizontal[last_dot_x0][last_dot_y0] = 1;
+		}
+		draw_dot(last_dot_x0, last_dot_y0);
+		draw_dot(last_dot_x1, last_dot_y1);
+		filled_square = false;
+		fill_square(last_dot_x0, last_dot_y0);
+		fill_square(last_dot_x0 - 1, last_dot_y0);
+		fill_square(last_dot_x0, last_dot_y0 - 1);
+		fill_square(last_dot_x0 - 1, last_dot_y0 - 1);
+		fill_square(last_dot_x1, last_dot_y1);
+		fill_square(last_dot_x1 - 1, last_dot_y1);
+		fill_square(last_dot_x1, last_dot_y1 - 1);
+		fill_square(last_dot_x1 - 1, last_dot_y1 - 1);
+		if(filled_square == false){
+			turn_over();
+		}
+		last_dot_x0 = false;
+		last_dot_y0 = false;
+		last_dot_x1 = false;
+		last_dot_y1 = false;
+		last_direc = false;
+	}
+}
+function process_squares(){
+	var this_data = get_query_variable("this");
+	var this_list = this_data.split(",");
+	for(var i = 0; i < 8; i++){
+		this_list[i] = parseInt(this_list[i], 16);
+		for(var j = 7; j >= 0; j--){
+			if((this_list[i]%2) == 1){
+				squares[i][j] = 1;
+				score += 1;
+				this_list[i]--;
+			} else {
+				squares[i][j] = 0;
+			}
+			this_list[i] /= 2;
+		}
+	}
+	var other_data = get_query_variable("other");
+	var other_list = other_data.split(",");
+	for(i = 0; i < 8; i++){
+		other_list[i] = parseInt(other_list[i], 16);
+		for(j = 7; j >= 0; j--){
+			if((other_list[i]%2) == 1){
+				squares[i][j] = 2;
+				score -= 1;
+				other_list[i]--;
+			} else {
+				if(squares[i][j] != 1){
+					squares[i][j] = 0;
+				}
+			}
+			other_list[i] /= 2;
+		}
+	}
+	document.getElementById("score").innerHTML = score.toString();
+}
+function process_lines(){
+	var horizontal_data = get_query_variable("horizontal");
+	var horizontal_list = horizontal_data.split(",");
+	for(var i = 0; i < 9; i++){
+		horizontal_list[i] = parseInt(horizontal_list[i], 16);
+		for(var j = 7; j >= 0; j--){
+			if((horizontal_list[i]%2) == 1){
+				horizontal[j][i] = 1;
+				horizontal_list[i]--;
+			} else {
+				horizontal[j][i] = 0;
+			}
+			horizontal_list[i] /= 2;
+		}
+	}
+	var vertical_data = get_query_variable("vertical");
+	var vertical_list = vertical_data.split(",");
+	for(i = 0; i < 9; i++){
+		vertical_list[i] = parseInt(vertical_list[i], 16);
+		for(j = 7; j >= 0; j--){
+			if((vertical_list[i]%2) == 1){
+				vertical[i][j] = 1;
+				vertical_list[i]--;
+			} else {
+				vertical[i][j] = 0;
+			}
+			vertical_list[i] /= 2;
+		}
+	}
+}
+function turn_over(){
+	var query_string = "?other=";
+	var num;
+	turn_is_over = true;
+	document.getElementsByClassName("button")[0].className = "disabled_button";
+	for(var i = 0; i < 8; i++){
+		if(i != 0){
+			query_string += ",";
+		}
+		num = 0;
+		for(var j = 0; j < 8; j++){
+			num *= 2;
+			if(squares[i][j] == 1){
+				num += 1;
+			}
+		}
+		query_string += num.toString(16);
+	}
+	query_string += "&this=";
+	for(i = 0; i < 8; i++){
+		if(i != 0){
+			query_string += ",";
+		}
+		num = 0;
+		for(j = 0; j < 8; j++){
+			num *= 2;
+			if(squares[i][j] == 2){
+				num += 1;
+			}
+		}
+		query_string += num.toString(16);
+	}
+	query_string += "&horizontal=";
+	for(i = 0; i < 9; i++){
+		if(i != 0){
+			query_string += ",";
+		}
+		num = 0;
+		for(j = 0; j < 8; j++){
+			num *= 2;
+			if(horizontal[j][i] == 1){
+				num += 1;
+			}
+		}
+		query_string += num.toString(16);
+	}
+	query_string += "&vertical=";
+	for(i = 0; i < 9; i++){
+		if(i != 0){
+			query_string += ",";
+		}
+		num = 0;
+		for(j = 0; j < 8; j++){
+			num *= 2;
+			if(vertical[i][j] == 1){
+				num += 1;
+			}
+		}
+		query_string += num.toString(16);
+	}
+	document.getElementById("link").value = "http://canvasgames.x10host.com/dotsandboxes.html"+query_string;
+	display_modal();
+}
+function display_modal(){
+	modal.style.display = "block";
+}
+
+var squares = createArray(8, 8);
+var horizontal = createArray(8, 9);
+var vertical = createArray(9, 8);
+var filled_square = false;
+var canvas = false;
+var context = false;
+var element_top = false;
+var element_left = false;
+var last_dot_x0 = false;
+var last_dot_y0 = false;
+var last_dot_x1 = false;
+var last_dot_y1 = false;
+var last_direc = false;
+var turn_is_over = false;
+var modal = false;
+var has_clicked = false;
+var score = 0;
+document.body.onload = onload;
+</script>
+</body>
+</html>

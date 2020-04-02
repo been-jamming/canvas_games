@@ -1,0 +1,17 @@
+<html>
+<head>
+<title>Dots and Boxes!</title>
+</head>
+<body>
+<p>Your turn is over!</p>
+<p>Send this url to your opponent:</p>
+<input id = "url">
+<script>
+function update_text(){
+	var query = window.location.href.split("?")[1];
+	document.getElementById("url").value = "http://canvasgames.000webhostapp.com/game.html?"+query;
+}
+document.body.onload = update_text;
+</script>
+</body>
+</html>

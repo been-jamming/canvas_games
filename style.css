@@ -1,0 +1,145 @@
+body{
+	background-color: #EEEEEE;
+	overflow: auto;
+	font-family: 'Source Sans Pro';
+}
+
+div.card{
+	float: left;
+	padding-bottom: 15px;
+	padding-left: 15px;
+	padding-right: 15px;
+	background-color: #fdfdfd;
+	border-radius: 5px;
+	box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.8);
+	overflow: hidden;
+	position: relative;
+	display: inline-block;
+	font-family: 'Poppins';
+	margin-left: 10px;
+	margin-right: 10px;
+}
+
+div.navbar{
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	z-index: 1;
+	width: 100%;
+	background-color: #fdfdfd;
+	border-radius: 0px 0px 5px 5px;
+	box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.8);
+	font-family: 'Permanent Marker';
+	font-size: 2em;
+	vertical-align: middle;
+	padding: 0px;
+	padding-top: 5px;
+	line-height: 60px;
+	height: 60px;
+}
+
+div.navbar img.home_icon{
+	float: left;
+	width: 60px;
+	height: 60px;
+	padding-right: 10px;
+}
+
+div.icon_tab{
+	display: inline-block;
+	float: left;
+	background-color: #DDDDDD;
+	height: 100%;
+}
+
+div.icon_tab_selected{
+	display: inline-block;
+	float: left;
+	background-color: #009900;
+	height: 100%;
+}
+
+div.icon_tab img{
+	padding-top: 0px;
+	padding-left: 0px;
+	padding-right: 0px;
+	padding-bottom: 5px;
+}
+
+div.navbar_padding{
+	height: 70px;
+}
+
+canvas{
+	border: 5px solid black;
+	border-radius: 5px;
+}
+
+div.center{
+	padding: 0;
+    margin: auto;
+    display: block;
+	margin: 0 auto;
+	bottom: 0px;
+	width: 630px;
+	height: 630px;
+}
+
+div.button{
+	display: inline-block;
+	background-color: LightGreen;
+	padding: 5px;
+	box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.8);
+	border-radius: 7px;
+	cursor: pointer;
+	transition: 0.1s background-color;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none; 
+}
+
+div.disabled_button{
+	display: inline-block;
+	background-color: Gray;
+	padding: 5px;
+	box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.8);
+	border-radius: 7px;
+	cursor: default;
+	transition: 0.1s background-color;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none; 
+}
+
+div.button_container{
+	padding-bottom: 10px;
+}
+
+div.modal {
+	display: none;
+	z-index: 2;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+div.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding-top: 0px;
+    border: 1px solid #888;
+    width: 80%;
+	box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.8);
+	border-radius: 7px;
+	min-height: 200px;
+}
